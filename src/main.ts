@@ -45,6 +45,17 @@ interface GitHubEvent {
   };
 }
 
+interface ContributionDay {
+  date: string;
+  contributionCount: number;
+  contributionLevel: "NONE" | "FIRST_QUARTILE" | "SECOND_QUARTILE" | "THIRD_QUARTILE" | "FOURTH_QUARTILE";
+}
+
+interface ContributionApiResponse {
+  contributions: ContributionDay[][];
+  totalContributions: number;
+}
+
 const DEFAULT_USER = "MatrixJava";
 const DEFAULT_ORG = "ByteBashersLabs";
 const STORAGE_USER_KEY = "portfolio.github.user";
@@ -73,7 +84,7 @@ const orgReposGrid = document.querySelector<HTMLElement>("#org-repos-grid");
 
 const activityTitle = document.querySelector<HTMLElement>("#activity-title");
 const activityList = document.querySelector<HTMLElement>("#activity-list");
-const contribChart = document.querySelector<HTMLImageElement>("#contrib-chart");
+const contribChart = document.querySelector<HTMLElement>("#contrib-chart");
 
 function sanitizeHandle(input: string): string {
   return input.trim().replace(/^@+/, "");
@@ -283,16 +294,129 @@ function renderEvents(events: GitHubEvent[]): void {
   }
 }
 
-function setContributionChart(userHandle: string): void {
+function contributionLevel(day: ContributionDay): number {
+  switch (day.contributionLevel) {
+    case "FIRST_QUARTILE":
+      return 1;
+    case "SECOND_QUARTILE":
+      return 2;
+    case "THIRD_QUARTILE":
+      return 3;
+    case "FOURTH_QUARTILE":
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+function contributionLabel(date: string, count: number): string {
+  const prettyDate = new Date(date).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+  if (count === 0) return `${prettyDate}: no contributions`;
+  if (count === 1) return `${prettyDate}: 1 contribution`;
+  return `${prettyDate}: ${count} contributions`;
+}
+
+async function fetchContributions(userHandle: string): Promise<ContributionApiResponse> {
+  const encoded = encodeURIComponent(userHandle);
+  const response = await fetch(`https://github-contributions-api.deno.dev/${encoded}.json`);
+  if (!response.ok) {
+    if (response.status === 404) throw new Error(`Contribution history for @${userHandle} was not found.`);
+    throw new Error(`Contribution history request failed (${response.status}).`);
+  }
+  return (await response.json()) as ContributionApiResponse;
+}
+
+function renderContributionChart(data: ContributionApiResponse, userHandle: string): void {
   if (!contribChart) return;
-  contribChart.src = `https://ghchart.rshah.org/ff3b3b/${encodeURIComponent(userHandle)}`;
-  contribChart.alt = `GitHub contributions for ${userHandle}`;
+  contribChart.innerHTML = "";
+
+  const recentWeeks = data.contributions.slice(-53);
+  const weeks = recentWeeks.map((week) => {
+    const padded = [...week];
+    while (padded.length < 7) {
+      padded.push({
+        date: "",
+        contributionCount: 0,
+        contributionLevel: "NONE",
+      });
+    }
+    return padded;
+  });
+
+  const months = document.createElement("div");
+  months.className = "contrib-months";
+  months.style.gridTemplateColumns = `repeat(${weeks.length}, var(--contrib-cell-size))`;
+
+  let lastMonth = "";
+  for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
+    const firstValidDay = weeks[weekIndex].find((day) => day.date);
+    if (!firstValidDay) continue;
+    const month = new Date(firstValidDay.date).toLocaleDateString(undefined, { month: "short" });
+    if (month !== lastMonth) {
+      const label = document.createElement("span");
+      label.textContent = month;
+      label.style.gridColumnStart = `${weekIndex + 1}`;
+      months.append(label);
+      lastMonth = month;
+    }
+  }
+
+  const body = document.createElement("div");
+  body.className = "contrib-body";
+
+  const weekdays = document.createElement("div");
+  weekdays.className = "contrib-weekdays";
+  weekdays.innerHTML = "<span>Mon</span><span>Wed</span><span>Fri</span>";
+
+  const grid = document.createElement("div");
+  grid.className = "contrib-grid";
+  grid.style.gridTemplateColumns = `repeat(${weeks.length}, var(--contrib-cell-size))`;
+
+  for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
+    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+      const day = weeks[weekIndex][dayIndex];
+      const cell = document.createElement("span");
+      cell.className = "contrib-cell";
+
+      if (!day.date) {
+        cell.classList.add("is-empty");
+      } else {
+        const level = contributionLevel(day);
+        if (level === 0) {
+          cell.classList.add("is-empty");
+        } else {
+          cell.classList.add("is-filled");
+          cell.dataset.level = String(level);
+        }
+        cell.title = contributionLabel(day.date, day.contributionCount);
+      }
+
+      grid.append(cell);
+    }
+  }
+
+  body.append(weekdays, grid);
+  contribChart.append(months, body);
+  contribChart.setAttribute(
+    "aria-label",
+    `${userHandle} contribution grid with ${data.totalContributions} total contributions in the last year.`,
+  );
+}
+
+async function setContributionChart(userHandle: string): Promise<void> {
+  const data = await fetchContributions(userHandle);
+  renderContributionChart(data, userHandle);
 }
 
 function clearContributionChart(message: string): void {
   if (!contribChart) return;
-  contribChart.removeAttribute("src");
-  contribChart.alt = message;
+  contribChart.innerHTML = "";
+  contribChart.append(placeholder(message));
+  contribChart.setAttribute("aria-label", message);
 }
 
 function applyOrgLinks(orgHandle: string, orgUrl?: string): void {
@@ -319,9 +443,10 @@ function applyOrgLinks(orgHandle: string, orgUrl?: string): void {
 }
 
 function applyUserProfile(user: GitHubUser, orgHandle: string): void {
+  const displayHandle = user.login.toLowerCase();
   if (displayName) {
     displayName.textContent = "";
-    displayName.append(document.createTextNode(`${user.name ?? user.login} `));
+    displayName.append(document.createTextNode(`${displayHandle} `));
     const cursor = document.createElement("span");
     cursor.className = "cursor";
     cursor.textContent = "_";
@@ -344,9 +469,10 @@ function applyUserProfile(user: GitHubUser, orgHandle: string): void {
 }
 
 function applyUserFallback(userHandle: string, orgHandle: string): void {
+  const displayHandle = userHandle.toLowerCase();
   if (displayName) {
     displayName.textContent = "";
-    displayName.append(document.createTextNode(`${userHandle} `));
+    displayName.append(document.createTextNode(`${displayHandle} `));
     const cursor = document.createElement("span");
     cursor.className = "cursor";
     cursor.textContent = "_";
@@ -453,7 +579,12 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
     resolvedUser = userResult.value.login;
     applyUserProfile(userResult.value, resolvedOrg);
     renderUserMetrics(userResult.value);
-    setContributionChart(resolvedUser);
+    try {
+      await setContributionChart(resolvedUser);
+    } catch (error) {
+      warnings.push(`Contribution chart: ${errorMessage(error)}`);
+      clearContributionChart("GitHub contribution chart unavailable right now.");
+    }
   } else {
     warnings.push(`User error: ${errorMessage(userResult.reason)}`);
     applyUserFallback(cleanUser, resolvedOrg);

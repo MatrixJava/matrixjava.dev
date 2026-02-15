@@ -15,6 +15,7 @@
   --danger: #ff3c3c;
   --shadow: rgba(0, 0, 0, 0.72);
   --glow-red: rgba(255, 40, 40, 0.24);
+  --contrib-cell-size: 14px;
 }
 
 * {
@@ -84,9 +85,9 @@ body::after {
 
 .terminal-block {
   position: relative;
-  padding: 20px 18px;
+  padding: 56px 18px 20px;
   border: 1px solid var(--panel-border);
-  border-radius: 14px;
+  border-radius: 0;
   background:
     linear-gradient(140deg, rgba(255, 52, 52, 0.06), transparent 28%),
     linear-gradient(180deg, var(--panel), var(--panel-strong));
@@ -103,17 +104,33 @@ body::after {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  height: 34px;
+  background:
+    linear-gradient(180deg, rgba(255, 62, 62, 0.14), rgba(125, 10, 10, 0.2)),
+    linear-gradient(90deg, rgba(255, 42, 42, 0.35), transparent 42%);
+  border-bottom: 1px solid rgba(255, 54, 54, 0.42);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 1;
 }
 
 .terminal-block::after {
-  content: "";
+  content: "● ● ●   MATRIXJAVA://TERMINAL";
   position: absolute;
-  inset: 0;
+  top: 8px;
+  left: 12px;
   pointer-events: none;
-  border-radius: 14px;
-  box-shadow: inset 0 0 48px rgba(255, 40, 40, 0.06);
+  color: var(--accent-hot);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 54, 54, 0.26);
+  z-index: 2;
+}
+
+.terminal-block > * {
+  position: relative;
+  z-index: 3;
 }
 
 .prompt {
@@ -384,20 +401,101 @@ h1 {
   overflow-x: auto;
   padding: 12px;
   border: 1px solid rgba(255, 59, 59, 0.34);
-  border-radius: 12px;
+  border-radius: 0;
   background: linear-gradient(180deg, rgba(4, 5, 8, 0.95), rgba(8, 9, 13, 0.94));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .contrib-chart {
-  display: block;
-  width: min(100%, 1040px);
-  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  min-width: fit-content;
+  width: fit-content;
   border: 1px solid rgba(255, 65, 65, 0.5);
   background: rgba(3, 4, 8, 0.98);
   padding: 12px;
-  filter: brightness(1.1) contrast(1.25) saturate(1.15);
+  filter: brightness(1.02) contrast(1.08) saturate(1.06);
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+.contrib-months {
+  display: grid;
+  gap: 3px;
+  margin-left: 28px;
+  color: #9f8b83;
+  font-size: 0.84rem;
+}
+
+.contrib-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.contrib-weekdays {
+  display: grid;
+  grid-template-rows: repeat(7, var(--contrib-cell-size));
+  align-items: center;
+  color: #9f8b83;
+  font-size: 0.78rem;
+  padding-top: 1px;
+}
+
+.contrib-weekdays span:nth-child(1) {
+  grid-row: 2;
+}
+
+.contrib-weekdays span:nth-child(2) {
+  grid-row: 4;
+}
+
+.contrib-weekdays span:nth-child(3) {
+  grid-row: 6;
+}
+
+.contrib-grid {
+  display: grid;
+  grid-template-rows: repeat(7, var(--contrib-cell-size));
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.contrib-cell {
+  width: var(--contrib-cell-size);
+  height: var(--contrib-cell-size);
+  border-radius: 50%;
+  background: #0b0b0f;
+  border: 1px solid #1d1c23;
+  position: relative;
+}
+
+.contrib-cell.is-empty {
+  background: #09090d;
+  border-color: #26242d;
+}
+
+.contrib-cell.is-filled {
+  background: #08080b;
+}
+
+.contrib-cell.is-filled[data-level="1"] {
+  box-shadow: 0 0 0 1px rgba(255, 72, 72, 0.5);
+  border-color: rgba(255, 108, 108, 0.62);
+}
+
+.contrib-cell.is-filled[data-level="2"] {
+  box-shadow: 0 0 0 1px rgba(255, 62, 62, 0.66), 0 0 8px rgba(255, 62, 62, 0.25);
+  border-color: rgba(255, 78, 78, 0.78);
+}
+
+.contrib-cell.is-filled[data-level="3"] {
+  box-shadow: 0 0 0 1px rgba(255, 46, 46, 0.78), 0 0 10px rgba(255, 40, 40, 0.32);
+  border-color: rgba(255, 58, 58, 0.95);
+}
+
+.contrib-cell.is-filled[data-level="4"] {
+  box-shadow: 0 0 0 2px rgba(255, 46, 46, 0.86), 0 0 14px rgba(255, 38, 38, 0.48);
+  border-color: rgba(255, 30, 30, 1);
 }
 
 .activity-list {
@@ -480,8 +578,8 @@ h1 {
   }
 
   .terminal-block {
-    border-radius: 12px;
-    padding: 16px 14px;
+    border-radius: 0;
+    padding: 52px 14px 16px;
   }
 
   .repo-grid {
@@ -493,7 +591,15 @@ h1 {
   }
 
   .contrib-chart {
-    width: min(100%, 980px);
     padding: 8px;
+  }
+
+  .contrib-months {
+    margin-left: 24px;
+    font-size: 0.78rem;
+  }
+
+  .contrib-weekdays {
+    font-size: 0.7rem;
   }
 }
