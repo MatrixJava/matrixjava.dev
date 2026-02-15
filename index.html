@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Portfolio</title>
+  <meta name="description" content="A terminal-inspired portfolio with live GitHub repositories and public contribution tracking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Orbitron:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <main class="shell">
+    <section class="terminal-block reveal" style="--delay: 0s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ whoami</p>
+      <h1 id="display-name">Your Name <span class="cursor">_</span></h1>
+      <p class="subhead" id="headline">Builder, debugger, and open-source collaborator.</p>
+      <p class="bio" id="bio">I build practical software in public and document the real process behind shipping products.</p>
+      <p class="org-line" id="org-line">
+        Building with
+        <a id="org-profile-link" href="https://github.com/ByteBashersLabs" target="_blank" rel="noreferrer">@ByteBashersLabs</a>
+      </p>
+      <nav class="socials" aria-label="Social links">
+        <a id="github-profile-link" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/terrillmoyoiv/" target="_blank" rel="noreferrer">LinkedIn</a>
+        <a href="mailto:you@example.com">Email</a>
+        <a href="#">Resume</a>
+      </nav>
+    </section>
+
+    <section class="terminal-block reveal" style="--delay: 0.12s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ config github.sources</p>
+      <form id="github-form" class="github-form">
+        <div class="config-grid">
+          <label class="field-group" for="github-user">
+            <span>GitHub user</span>
+            <input id="github-user" name="github-user" type="text" autocomplete="off" spellcheck="false" required>
+          </label>
+          <label class="field-group" for="github-org">
+            <span>GitHub org</span>
+            <input id="github-org" name="github-org" type="text" autocomplete="off" spellcheck="false" required>
+          </label>
+        </div>
+        <div class="input-row">
+          <button type="submit">Load Profile</button>
+        </div>
+        <p class="status" id="status-text">Set your GitHub user and organization to load live repositories and contribution activity.</p>
+      </form>
+      <div id="profile-metrics" class="metrics" aria-live="polite"></div>
+      <div id="org-summary" class="metrics org-summary" aria-live="polite"></div>
+    </section>
+
+    <section class="terminal-block reveal" style="--delay: 0.24s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ ls github/repos --sort=updated</p>
+      <div class="repo-section">
+        <h2 class="section-title" id="user-repos-title">Personal Repositories (@MatrixJava)</h2>
+        <div id="user-repos-grid" class="repo-grid" aria-live="polite"></div>
+      </div>
+      <div class="repo-section">
+        <h2 class="section-title" id="org-repos-title">Organization Repositories (@ByteBashersLabs)</h2>
+        <div id="org-repos-grid" class="repo-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="terminal-block reveal" style="--delay: 0.36s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ monitor --public contributions --user</p>
+      <h2 class="section-title" id="activity-title">Personal Public Activity (@MatrixJava)</h2>
+      <div class="contrib-wrap">
+        <img id="contrib-chart" class="contrib-chart" src="" alt="GitHub contribution chart">
+      </div>
+      <div id="activity-list" class="activity-list" aria-live="polite"></div>
+    </section>
+
+    <section class="terminal-block reveal" style="--delay: 0.48s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ cat interests.md</p>
+      <ul class="simple-list">
+        <li>Developer tools and terminal workflows</li>
+        <li>Backend systems and APIs</li>
+        <li>Performance and reliability engineering</li>
+        <li>Documenting the build process in public</li>
+      </ul>
+    </section>
+
+    <section class="terminal-block reveal" style="--delay: 0.6s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ contact</p>
+      <ul class="simple-list">
+        <li>Email: <a href="mailto:you@example.com">you@example.com</a></li>
+        <li>GitHub: <a id="contact-github-link" href="https://github.com/" target="_blank" rel="noreferrer">github.com/yourusername</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/terrillmoyoiv/" target="_blank" rel="noreferrer">linkedin.com/in/terrillmoyoiv</a></li>
+        <li>Org: <a id="contact-org-link" href="https://github.com/ByteBashersLabs" target="_blank" rel="noreferrer">github.com/ByteBashersLabs</a></li>
+      </ul>
+      <p class="footnote">Theme direction inspired by terminal-native personal websites and pastel shell palettes.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
