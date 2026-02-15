@@ -100,11 +100,9 @@ function setSectionLabels(userHandle: string, orgHandle: string): void {
   if (activityTitle) activityTitle.textContent = `Personal Public Activity (@${userHandle})`;
 }
 
-function updateUrl(userHandle: string, orgHandle: string): void {
+function updateUrl(): void {
   const url = new URL(window.location.href);
-  url.searchParams.set("user", userHandle);
-  url.searchParams.set("org", orgHandle);
-  history.replaceState(null, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
+  history.replaceState(null, "", `${url.pathname}${url.hash}`);
 }
 
 function placeholder(message: string): HTMLParagraphElement {
@@ -488,7 +486,7 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
   }
 
   setSectionLabels(resolvedUser, resolvedOrg);
-  updateUrl(resolvedUser, resolvedOrg);
+  updateUrl();
   if (userInput) userInput.value = resolvedUser;
   if (orgInput) orgInput.value = resolvedOrg;
 
