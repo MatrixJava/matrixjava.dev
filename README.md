@@ -1,54 +1,97 @@
-# Bun TypeScript Portfolio
+# matrixjava.dev
 
-Terminal-inspired portfolio web app with:
-- Live GitHub repository cards (public repos, sorted by recent updates)
-- Public activity feed from GitHub events
-- Public contributions calendar embed
-- Username picker stored in `localStorage`
+Tron-inspired terminal portfolio built with Bun + TypeScript.
 
-## Run
+Live site: [https://matrixjava.dev](https://matrixjava.dev)
+
+## What It Includes
+
+- Personal and organization GitHub profile loading (`user` + `org`)
+- Live repository sections for both:
+  - personal repos
+  - org repos
+- Public GitHub activity feed
+- Custom contribution visualization:
+  - dark circular cells for empty days
+  - red ring intensity for active days
+- Persistent profile selection via `localStorage`
+- Responsive layout for desktop and mobile
+
+## Tech Stack
+
+- Bun (runtime + build)
+- TypeScript
+- Vanilla HTML/CSS/TS
+- Vercel (deployment)
+
+## Local Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed
+
+### Run
 
 ```bash
 bun install
 bun run dev
 ```
 
-Then open `http://localhost:3000`.
+Open: `http://localhost:3000`
 
-## Type Check
+### Type Check
 
 ```bash
 bun run check
 ```
 
-## Build (Static)
+### Production Build (Static Output)
 
 ```bash
 bun run build
 ```
 
-Build output is generated in `dist/`.
+Build output goes to `dist/`.
 
-## Deploy to Vercel
+## Deployment
 
-This project is configured for Vercel via `vercel.json`.
+This repo is configured for Vercel using `vercel.json`.
 
-1. Push this repo to GitHub.
-2. In Vercel, import the repo as a new project.
-3. Vercel will run:
-   - `bun install`
-   - `bun run build`
-4. Vercel will serve `dist/`.
+- Install command: `bun install`
+- Build command: `bun run build`
+- Output directory: `dist`
 
-Note: Vercel deploys this app as a static site. Keep `server.ts` for local Bun development.
+## Project Structure
 
-## Customize
+```text
+.
+├─ index.html          # page structure
+├─ styles.css          # visual system/theme
+├─ src/
+│  └─ main.ts          # data loading + rendering logic
+├─ server.ts           # local Bun dev server
+├─ scripts/
+│  └─ build.ts         # static build script for Vercel
+├─ vercel.json         # Vercel project config
+├─ package.json
+└─ tsconfig.json
+```
 
-- Update static personal text in `index.html`
-- Update theme/design in `styles.css`
-- Update GitHub fetch/render logic in `src/main.ts`
+## Data Sources
 
-## Notes
+- GitHub REST API (`api.github.com`) for profile, repos, and events
+- Contribution history API: `github-contributions-api.deno.dev`
 
-- This app uses the unauthenticated GitHub REST API, which has public rate limits.
-- Contribution heatmap is served from `ghchart.rshah.org` for a public visual calendar.
+Notes:
+- API calls are client-side.
+- Unauthenticated GitHub API usage is rate-limited by GitHub.
+
+## Customization Guide
+
+- Edit profile text and section content in `index.html`
+- Edit theme and terminal styling in `styles.css`
+- Edit GitHub data flow and render behavior in `src/main.ts`
+
+## Domain
+
+Production domain is `matrixjava.dev` on Vercel with custom DNS records managed at Squarespace Domains.
