@@ -39,6 +39,19 @@ bun run dev
 
 Open: `http://localhost:3000`
 
+### Optional: GitHub Personal Access Token (recommended)
+
+To avoid GitHub API rate limits, configure a token for server-side proxy requests.
+
+1. Copy `.env.example` to `.env`
+2. Set:
+
+```bash
+GITHUB_TOKEN=github_pat_xxx
+```
+
+This token is used only on server-side endpoints (`/api/github`) and is not exposed to the browser.
+
 ### Type Check
 
 ```bash
@@ -61,17 +74,26 @@ This repo is configured for Vercel using `vercel.json`.
 - Build command: `bun run build`
 - Output directory: `dist`
 
+### Vercel Environment Variable
+
+Set this in Vercel Project Settings -> Environment Variables:
+
+- `GITHUB_TOKEN` = your personal access token
+
 ## Project Structure
 
 ```text
 .
 ├─ index.html          # page structure
 ├─ styles.css          # visual system/theme
+├─ api/
+│  └─ github.ts        # server-side GitHub proxy (PAT support)
 ├─ src/
 │  └─ main.ts          # data loading + rendering logic
 ├─ server.ts           # local Bun dev server
 ├─ scripts/
 │  └─ build.ts         # static build script for Vercel
+├─ .env.example
 ├─ vercel.json         # Vercel project config
 ├─ package.json
 └─ tsconfig.json
@@ -83,8 +105,8 @@ This repo is configured for Vercel using `vercel.json`.
 - Contribution history API: `github-contributions-api.deno.dev`
 
 Notes:
-- API calls are client-side.
-- Unauthenticated GitHub API usage is rate-limited by GitHub.
+- GitHub REST calls are proxied via `/api/github`.
+- Add `GITHUB_TOKEN` to raise GitHub rate limits significantly.
 
 ## Customization Guide
 

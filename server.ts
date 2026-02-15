@@ -9,6 +9,36 @@ async function serveFile(path: string, contentType: string): Promise<Response> {
   return new Response(file, { headers: { "content-type": contentType } });
 }
 
+async function proxyGitHub(endpoint: string): Promise<Response> {
+  if (!endpoint || !endpoint.startsWith("/")) {
+    return new Response(JSON.stringify({ message: "Invalid GitHub endpoint." }), {
+      status: 400,
+      headers: { "content-type": "application/json; charset=utf-8" },
+    });
+  }
+
+  const target = `https://api.github.com${endpoint}`;
+  const headers = new Headers({
+    Accept: "application/vnd.github+json",
+    "User-Agent": "matrixjava-dev-portfolio",
+  });
+
+  if (Bun.env.GITHUB_TOKEN) {
+    headers.set("Authorization", `Bearer ${Bun.env.GITHUB_TOKEN}`);
+  }
+
+  const upstream = await fetch(target, { headers });
+  const body = await upstream.text();
+
+  return new Response(body, {
+    status: upstream.status,
+    headers: {
+      "content-type": upstream.headers.get("content-type") ?? "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
 const server = Bun.serve({
   port: PORT,
   async fetch(request) {
@@ -31,6 +61,11 @@ const server = Bun.serve({
           "cache-control": "no-store",
         },
       });
+    }
+
+    if (url.pathname === "/api/github") {
+      const endpoint = url.searchParams.get("endpoint") ?? "";
+      return proxyGitHub(endpoint);
     }
 
     return new Response("Not Found", { status: 404 });

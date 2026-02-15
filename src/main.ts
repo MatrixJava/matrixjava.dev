@@ -56,10 +56,21 @@ interface ContributionApiResponse {
   totalContributions: number;
 }
 
+interface PortfolioSnapshot {
+  savedAt: string;
+  user?: GitHubUser;
+  org?: GitHubOrg;
+  userRepos?: GitHubRepo[];
+  orgRepos?: GitHubRepo[];
+  events?: GitHubEvent[];
+  contributions?: ContributionApiResponse;
+}
+
 const DEFAULT_USER = "MatrixJava";
 const DEFAULT_ORG = "ByteBashersLabs";
 const STORAGE_USER_KEY = "portfolio.github.user";
 const STORAGE_ORG_KEY = "portfolio.github.org";
+const SNAPSHOT_KEY = "portfolio.github.snapshot.v1";
 
 const form = document.querySelector<HTMLFormElement>("#github-form");
 const userInput = document.querySelector<HTMLInputElement>("#github-user");
@@ -90,6 +101,44 @@ function sanitizeHandle(input: string): string {
   return input.trim().replace(/^@+/, "");
 }
 
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function readSnapshot(): PortfolioSnapshot | null {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PortfolioSnapshot;
+    if (!parsed || typeof parsed !== "object" || typeof parsed.savedAt !== "string") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeSnapshot(snapshot: PortfolioSnapshot): void {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+  } catch {
+    // Ignore storage errors (private mode/quota/etc.)
+  }
+}
+
+function isRateLimitMessage(text: string): boolean {
+  return /rate limit/i.test(text);
+}
+
+function githubEndpoint(path: string): string {
+  return `/api/github?endpoint=${encodeURIComponent(path)}`;
+}
+
 function setStatus(message: string, tone: StatusTone = "default"): void {
   if (!statusText) return;
   statusText.textContent = message;
@@ -106,9 +155,21 @@ function formatDate(iso: string): string {
 }
 
 function setSectionLabels(userHandle: string, orgHandle: string): void {
-  if (userReposTitle) userReposTitle.textContent = `Personal Repositories (@${userHandle})`;
-  if (orgReposTitle) orgReposTitle.textContent = `Organization Repositories (@${orgHandle})`;
-  if (activityTitle) activityTitle.textContent = `Personal Public Activity (@${userHandle})`;
+  if (userReposTitle) {
+    userReposTitle.textContent = userHandle
+      ? `Personal Repositories (@${userHandle})`
+      : "Personal Repositories (Not Loaded)";
+  }
+  if (orgReposTitle) {
+    orgReposTitle.textContent = orgHandle
+      ? `Organization Repositories (@${orgHandle})`
+      : "Organization Repositories (Not Loaded)";
+  }
+  if (activityTitle) {
+    activityTitle.textContent = userHandle
+      ? `Personal Public Activity (@${userHandle})`
+      : "Personal Public Activity (Not Loaded)";
+  }
 }
 
 function updateUrl(): void {
@@ -137,6 +198,17 @@ function createMetricCard(label: string, value: string): HTMLDivElement {
 
   card.append(labelElement, valueElement);
   return card;
+}
+
+function resolveOrgDescription(org: GitHubOrg): string {
+  const explicitDescription = org.description?.trim();
+  if (explicitDescription) return explicitDescription;
+
+  if (org.login.toLowerCase() === "bytebasherslabs") {
+    return "ByteBashersLabs is a builder-focused software org creating practical products, open-source tools, and real-world learning projects in public.";
+  }
+
+  return "No organization description provided.";
 }
 
 function renderUserMetrics(user: GitHubUser): void {
@@ -173,7 +245,7 @@ function renderOrgSummary(org: GitHubOrg): void {
 
   const description = document.createElement("p");
   description.className = "org-description";
-  description.textContent = org.description ?? "No organization description provided.";
+  description.textContent = resolveOrgDescription(org);
 
   orgSummary.append(heading, cards, description);
 }
@@ -407,9 +479,10 @@ function renderContributionChart(data: ContributionApiResponse, userHandle: stri
   );
 }
 
-async function setContributionChart(userHandle: string): Promise<void> {
+async function setContributionChart(userHandle: string): Promise<ContributionApiResponse> {
   const data = await fetchContributions(userHandle);
   renderContributionChart(data, userHandle);
+  return data;
 }
 
 function clearContributionChart(message: string): void {
@@ -534,18 +607,18 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
   const encodedOrg = encodeURIComponent(cleanOrg);
 
   const [orgResult, orgReposResult, userResult, userReposResult, eventsResult] = await Promise.allSettled([
-    fetchJson<GitHubOrg>(`https://api.github.com/orgs/${encodedOrg}`, `Organization @${cleanOrg}`),
+    fetchJson<GitHubOrg>(githubEndpoint(`/orgs/${encodedOrg}`), `Organization @${cleanOrg}`),
     fetchJson<GitHubRepo[]>(
-      `https://api.github.com/orgs/${encodedOrg}/repos?sort=updated&per_page=100&type=public`,
+      githubEndpoint(`/orgs/${encodedOrg}/repos?sort=updated&per_page=100&type=public`),
       `Organization repositories for @${cleanOrg}`,
     ),
-    fetchJson<GitHubUser>(`https://api.github.com/users/${encodedUser}`, `User @${cleanUser}`),
+    fetchJson<GitHubUser>(githubEndpoint(`/users/${encodedUser}`), `User @${cleanUser}`),
     fetchJson<GitHubRepo[]>(
-      `https://api.github.com/users/${encodedUser}/repos?sort=updated&per_page=100&type=owner`,
+      githubEndpoint(`/users/${encodedUser}/repos?sort=updated&per_page=100&type=owner`),
       `Repositories for @${cleanUser}`,
     ),
     fetchJson<GitHubEvent[]>(
-      `https://api.github.com/users/${encodedUser}/events/public?per_page=30`,
+      githubEndpoint(`/users/${encodedUser}/events/public?per_page=30`),
       `Public activity for @${cleanUser}`,
     ),
   ]);
