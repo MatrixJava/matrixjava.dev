@@ -1100,7 +1100,49 @@ h1 {
   }
 
   .ops-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-top: 1px solid rgba(192, 132, 252, 0.22);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.6) rgba(12, 8, 22, 0.8);
+  }
+
+  .ops-tabs::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .ops-tabs::-webkit-scrollbar-track {
+    background: rgba(12, 8, 22, 0.8);
+  }
+
+  .ops-tabs::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.6);
+  }
+
+  .ops-tab {
+    flex: 0 0 168px;
+    min-height: 56px;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 7px 10px;
+    border-left: none;
+    border-right: 1px solid rgba(192, 132, 252, 0.28);
+    scroll-snap-align: start;
+  }
+
+  .ops-tab::after {
+    display: none;
+  }
+
+  .ops-tab-label {
+    font-size: 0.69rem;
+    line-height: 1.05;
+  }
+
+  .ops-tab-value {
+    max-width: 146px;
+    font-size: 0.64rem;
   }
 
   .ops-grid {
