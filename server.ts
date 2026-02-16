@@ -1,5 +1,6 @@
 const PORT = Number(Bun.env.PORT ?? 3000);
 const transpiler = new Bun.Transpiler({ loader: "ts" });
+const SPA_ROUTES = new Set(["/", "/index.html", "/main", "/main/", "/portfolio", "/portfolio/", "/github", "/github/", "/network", "/network/", "/resume", "/resume/"]);
 
 async function serveFile(path: string, contentType: string): Promise<Response> {
   const file = Bun.file(path);
@@ -44,12 +45,16 @@ const server = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/" || url.pathname === "/index.html") {
+    if (SPA_ROUTES.has(url.pathname)) {
       return serveFile("index.html", "text/html; charset=utf-8");
     }
 
     if (url.pathname === "/styles.css") {
       return serveFile("styles.css", "text/css; charset=utf-8");
+    }
+
+    if (url.pathname === "/content/work-experience.md") {
+      return serveFile("content/work-experience.md", "text/markdown; charset=utf-8");
     }
 
     if (url.pathname === "/main.js") {

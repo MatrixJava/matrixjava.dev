@@ -1,4 +1,5 @@
 type StatusTone = "default" | "loading" | "warning" | "error";
+type PageView = "main" | "portfolio" | "github" | "network" | "resume";
 
 interface GitHubUser {
   login: string;
@@ -82,6 +83,7 @@ const headline = document.querySelector<HTMLElement>("#headline");
 const bio = document.querySelector<HTMLElement>("#bio");
 const orgLine = document.querySelector<HTMLElement>("#org-line");
 const githubProfileLink = document.querySelector<HTMLAnchorElement>("#github-profile-link");
+const emailRevealTrigger = document.querySelector<HTMLAnchorElement>("#email-reveal-trigger");
 const contactGithubLink = document.querySelector<HTMLAnchorElement>("#contact-github-link");
 const contactOrgLink = document.querySelector<HTMLAnchorElement>("#contact-org-link");
 
@@ -96,9 +98,64 @@ const orgReposGrid = document.querySelector<HTMLElement>("#org-repos-grid");
 const activityTitle = document.querySelector<HTMLElement>("#activity-title");
 const activityList = document.querySelector<HTMLElement>("#activity-list");
 const contribChart = document.querySelector<HTMLElement>("#contrib-chart");
+const opsClock = document.querySelector<HTMLElement>("#ops-clock");
+const opsUptime = document.querySelector<HTMLElement>("#ops-uptime");
+const opsDate = document.querySelector<HTMLElement>("#ops-date");
+const opsTabMain = document.querySelector<HTMLElement>("#ops-tab-main");
+const opsTabPortfolio = document.querySelector<HTMLElement>("#ops-tab-portfolio");
+const opsTabGithub = document.querySelector<HTMLElement>("#ops-tab-github");
+const opsTabNetwork = document.querySelector<HTMLElement>("#ops-tab-network");
+const opsTabResume = document.querySelector<HTMLElement>("#ops-tab-resume");
+const opsNetworkState = document.querySelector<HTMLElement>("#ops-network-state");
+const opsFilesSummary = document.querySelector<HTMLElement>("#ops-files-summary");
+const opsFileFeed = document.querySelector<HTMLElement>("#ops-file-feed");
+const opsFilesFoot = document.querySelector<HTMLElement>("#ops-files-foot");
+const resumeStatus = document.querySelector<HTMLElement>("#resume-status");
+const resumeMarkdown = document.querySelector<HTMLElement>("#resume-markdown");
+
+const bootStartedAt = Date.now();
+const PAGE_VIEWS: PageView[] = ["main", "portfolio", "github", "network", "resume"];
+const pageSections = Array.from(document.querySelectorAll<HTMLElement>("[data-pages]"));
+const opsTabLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>(".ops-tab[data-page]"));
+const PUBLIC_EMAIL = "terrillmoyo@me.com";
 
 function sanitizeHandle(input: string): string {
   return input.trim().replace(/^@+/, "");
+}
+
+function resolvePageView(pathname: string): PageView {
+  const first = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+  if (first && PAGE_VIEWS.includes(first as PageView)) {
+    return first as PageView;
+  }
+  return "main";
+}
+
+function parseSectionPages(rawPages: string | undefined): PageView[] {
+  if (!rawPages) return [];
+  return rawPages
+    .split(/[,\s]+/)
+    .map((value) => value.trim().toLowerCase())
+    .filter((value): value is PageView => PAGE_VIEWS.includes(value as PageView));
+}
+
+function applyPageView(view: PageView): void {
+  for (const section of pageSections) {
+    const pages = parseSectionPages(section.dataset.pages);
+    const isVisible = pages.length === 0 || pages.includes(view);
+    section.hidden = !isVisible;
+  }
+
+  for (const link of opsTabLinks) {
+    const route = (link.dataset.page ?? "").toLowerCase();
+    const isActive = route === view;
+    link.classList.toggle("ops-tab-active", isActive);
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
 }
 
 function formatDateTime(iso: string): string {
@@ -172,6 +229,126 @@ function setSectionLabels(userHandle: string, orgHandle: string): void {
   }
 }
 
+function initEmailReveal(): void {
+  if (!emailRevealTrigger) return;
+
+  const defaultLabel = "Email";
+  const defaultAriaLabel = "Reveal email address";
+  let revealed = false;
+  emailRevealTrigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    revealed = !revealed;
+    if (revealed) {
+      emailRevealTrigger.textContent = PUBLIC_EMAIL;
+      emailRevealTrigger.href = `mailto:${PUBLIC_EMAIL}`;
+      emailRevealTrigger.classList.add("revealed");
+      emailRevealTrigger.setAttribute("aria-label", `Email ${PUBLIC_EMAIL}`);
+      emailRevealTrigger.title = "Click again to hide email";
+      return;
+    }
+
+    emailRevealTrigger.textContent = defaultLabel;
+    emailRevealTrigger.href = "#";
+    emailRevealTrigger.classList.remove("revealed");
+    emailRevealTrigger.setAttribute("aria-label", defaultAriaLabel);
+    emailRevealTrigger.removeAttribute("title");
+  });
+}
+
+function setOpsTabMain(handle: string): void {
+  if (!opsTabMain) return;
+  opsTabMain.textContent = `${handle.toLowerCase()}@devstack`;
+}
+
+function setOpsTabGithub(userHandle: string, orgHandle: string): void {
+  if (!opsTabGithub) return;
+  opsTabGithub.textContent = `@${userHandle.toLowerCase()} | @${orgHandle.toLowerCase()}`;
+}
+
+function setOpsPortfolioSummary(userCount: number | null, orgCount: number | null): void {
+  if (!opsTabPortfolio) return;
+
+  if (userCount === null && orgCount === null) {
+    opsTabPortfolio.textContent = "repos unavailable";
+    return;
+  }
+  if (userCount !== null && orgCount !== null) {
+    opsTabPortfolio.textContent = `repos ${userCount}/${orgCount}`;
+    return;
+  }
+  if (userCount !== null) {
+    opsTabPortfolio.textContent = `repos ${userCount}/--`;
+    return;
+  }
+  opsTabPortfolio.textContent = `repos --/${orgCount}`;
+}
+
+function setOpsNetworkState(label: string, tone: "online" | "warning" | "degraded", detail: string): void {
+  if (opsNetworkState) {
+    opsNetworkState.textContent = label;
+    opsNetworkState.classList.remove("ops-state-online", "ops-state-warning", "ops-state-degraded");
+    if (tone === "online") opsNetworkState.classList.add("ops-state-online");
+    if (tone === "warning") opsNetworkState.classList.add("ops-state-warning");
+    if (tone === "degraded") opsNetworkState.classList.add("ops-state-degraded");
+  }
+  if (opsTabNetwork) {
+    opsTabNetwork.textContent = detail;
+  }
+}
+
+function setOpsResumeSummary(status: string): void {
+  if (!opsTabResume) return;
+  opsTabResume.textContent = status;
+}
+
+function formatDateBadge(date: Date): string {
+  return date
+    .toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    })
+    .toUpperCase();
+}
+
+function formatClockValue(date: Date): string {
+  return date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+function formatUptimeValue(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  const ss = String(seconds).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
+}
+
+function startOpsTelemetryClock(): void {
+  if (!opsClock && !opsUptime && !opsDate) return;
+
+  const tick = () => {
+    const now = new Date();
+    if (opsClock) opsClock.textContent = formatClockValue(now);
+    if (opsDate) opsDate.textContent = formatDateBadge(now);
+    if (opsUptime) {
+      const uptime = formatUptimeValue(Date.now() - bootStartedAt);
+      opsUptime.textContent = `uptime ${uptime}`;
+    }
+  };
+
+  tick();
+  window.setInterval(tick, 1000);
+}
+
 function updateUrl(): void {
   const url = new URL(window.location.href);
   history.replaceState(null, "", `${url.pathname}${url.hash}`);
@@ -182,6 +359,163 @@ function placeholder(message: string): HTMLParagraphElement {
   p.className = "placeholder";
   p.textContent = message;
   return p;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatMarkdownInline(value: string): string {
+  let formatted = escapeHtml(value);
+  formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  formatted = formatted.replace(/`([^`]+)`/g, "<code>$1</code>");
+  formatted = formatted.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  formatted = formatted.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  return formatted;
+}
+
+function renderMarkdown(markdown: string): string {
+  const lines = markdown.replace(/\r/g, "").split("\n");
+  const html: string[] = [];
+  let inList = false;
+
+  const closeList = () => {
+    if (!inList) return;
+    html.push("</ul>");
+    inList = false;
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    const compact = line.trim();
+
+    if (!compact) {
+      closeList();
+      continue;
+    }
+
+    const h1 = compact.match(/^#\s+(.+)/);
+    if (h1) {
+      closeList();
+      html.push(`<h1>${formatMarkdownInline(h1[1])}</h1>`);
+      continue;
+    }
+
+    const h2 = compact.match(/^##\s+(.+)/);
+    if (h2) {
+      closeList();
+      html.push(`<h2>${formatMarkdownInline(h2[1])}</h2>`);
+      continue;
+    }
+
+    const h3 = compact.match(/^###\s+(.+)/);
+    if (h3) {
+      closeList();
+      html.push(`<h3>${formatMarkdownInline(h3[1])}</h3>`);
+      continue;
+    }
+
+    const list = compact.match(/^[-*]\s+(.+)/);
+    if (list) {
+      if (!inList) {
+        inList = true;
+        html.push("<ul>");
+      }
+      html.push(`<li>${formatMarkdownInline(list[1])}</li>`);
+      continue;
+    }
+
+    closeList();
+    html.push(`<p>${formatMarkdownInline(compact)}</p>`);
+  }
+
+  closeList();
+  return html.join("\n");
+}
+
+async function loadResumeMarkdown(): Promise<void> {
+  if (!resumeMarkdown || !resumeStatus) return;
+  resumeStatus.textContent = "Loading work experience markdown...";
+  resumeStatus.classList.remove("error", "warning");
+  resumeStatus.classList.add("loading");
+  setOpsResumeSummary("loading");
+
+  try {
+    const response = await fetch("/content/work-experience.md", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load markdown (${response.status}).`);
+    }
+    const markdown = await response.text();
+    const rendered = renderMarkdown(markdown);
+    resumeMarkdown.innerHTML = rendered;
+    resumeStatus.textContent = "Experience dossier loaded from work-experience.md";
+    resumeStatus.classList.remove("loading", "error", "warning");
+    setOpsResumeSummary("loaded");
+  } catch (error) {
+    resumeMarkdown.innerHTML = "";
+    resumeMarkdown.append(placeholder("Unable to load work experience markdown right now."));
+    resumeStatus.textContent = errorMessage(error);
+    resumeStatus.classList.remove("loading", "warning");
+    resumeStatus.classList.add("error");
+    setOpsResumeSummary("error");
+  }
+}
+
+function renderOpsFileRows(rows: Array<{ name: string; type: string; updated: string }>): void {
+  if (!opsFileFeed) return;
+  opsFileFeed.innerHTML = "";
+  for (const row of rows) {
+    const item = document.createElement("li");
+    const name = document.createElement("span");
+    const type = document.createElement("span");
+    const updated = document.createElement("span");
+    name.textContent = row.name;
+    type.textContent = row.type;
+    updated.textContent = row.updated;
+    item.append(name, type, updated);
+    opsFileFeed.append(item);
+  }
+}
+
+function setOpsFilePanelLoading(): void {
+  if (opsFilesSummary) opsFilesSummary.textContent = "loading";
+  if (opsFilesFoot) opsFilesFoot.textContent = "Mount /github syncing...";
+  renderOpsFileRows([{ name: "syncing...", type: "stream", updated: "--" }]);
+}
+
+function renderOpsFilePanel(repos: GitHubRepo[]): void {
+  if (!opsFileFeed) return;
+  const rows = repos.slice(0, 9).map((repo) => ({
+    name: repo.name,
+    type: repo.language ? repo.language.toLowerCase() : "repo",
+    updated: formatDate(repo.pushed_at),
+  }));
+
+  if (rows.length === 0) {
+    renderOpsFileRows([{ name: "no-public-repos", type: "empty", updated: "--" }]);
+    if (opsFilesSummary) opsFilesSummary.textContent = "0 entries";
+    if (opsFilesFoot) opsFilesFoot.textContent = "Mount /github idle";
+    return;
+  }
+
+  renderOpsFileRows(rows);
+  if (opsFilesSummary) opsFilesSummary.textContent = `${rows.length} entries`;
+  if (opsFilesFoot) opsFilesFoot.textContent = `Mount /github used ${Math.min(95, rows.length * 9)}%`;
+}
+
+function renderOpsFilePanelFallback(): void {
+  renderOpsFileRows([
+    { name: "matrixjava.dev", type: "site", updated: "cached" },
+    { name: "github-stream", type: "api", updated: "offline" },
+    { name: "portfolio-state", type: "cache", updated: "stale" },
+  ]);
+  if (opsFilesSummary) opsFilesSummary.textContent = "fallback";
+  if (opsFilesFoot) opsFilesFoot.textContent = "Mount /github degraded";
 }
 
 function createMetricCard(label: string, value: string): HTMLDivElement {
@@ -596,12 +930,17 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
 
   setSectionLabels(cleanUser, cleanOrg);
   setStatus(`Loading @${cleanUser} and @${cleanOrg}...`, "loading");
+  setOpsTabMain(cleanUser);
+  setOpsTabGithub(cleanUser, cleanOrg);
+  setOpsPortfolioSummary(null, null);
+  setOpsNetworkState("SYNCING", "warning", "api syncing");
 
   if (userReposGrid) userReposGrid.innerHTML = "";
   if (orgReposGrid) orgReposGrid.innerHTML = "";
   if (activityList) activityList.innerHTML = "";
   if (userMetrics) userMetrics.innerHTML = "";
   if (orgSummary) orgSummary.innerHTML = "";
+  setOpsFilePanelLoading();
 
   const encodedUser = encodeURIComponent(cleanUser);
   const encodedOrg = encodeURIComponent(cleanOrg);
@@ -625,6 +964,8 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
 
   let resolvedUser = cleanUser;
   let resolvedOrg = cleanOrg;
+  let userRepoCount: number | null = null;
+  let orgRepoCount: number | null = null;
   const warnings: string[] = [];
 
   if (orgResult.status === "fulfilled") {
@@ -639,6 +980,7 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
 
   if (orgReposResult.status === "fulfilled") {
     const repos = normalizeRepos(orgReposResult.value);
+    orgRepoCount = repos.length;
     renderRepoGrid(orgReposGrid, repos, "No public organization repositories found.");
   } else {
     warnings.push(`Org repos: ${errorMessage(orgReposResult.reason)}`);
@@ -670,13 +1012,16 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
 
   if (userReposResult.status === "fulfilled") {
     const repos = normalizeRepos(userReposResult.value);
+    userRepoCount = repos.length;
     renderRepoGrid(userReposGrid, repos, "No public personal repositories found.");
+    renderOpsFilePanel(repos);
   } else {
     warnings.push(`User repos: ${errorMessage(userReposResult.reason)}`);
     if (userReposGrid) {
       userReposGrid.innerHTML = "";
       userReposGrid.append(placeholder("Personal repositories unavailable right now."));
     }
+    renderOpsFilePanelFallback();
   }
 
   if (eventsResult.status === "fulfilled") {
@@ -690,6 +1035,9 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
   }
 
   setSectionLabels(resolvedUser, resolvedOrg);
+  setOpsTabMain(resolvedUser);
+  setOpsTabGithub(resolvedUser, resolvedOrg);
+  setOpsPortfolioSummary(userRepoCount, orgRepoCount);
   updateUrl();
   if (userInput) userInput.value = resolvedUser;
   if (orgInput) orgInput.value = resolvedOrg;
@@ -702,17 +1050,33 @@ async function loadPortfolio(userHandle: string, orgHandle: string): Promise<voi
   }
 
   if (warnings.length === 0) {
+    setOpsNetworkState("ONLINE", "online", "api stable");
     setStatus(`Loaded @${resolvedUser} and @${resolvedOrg}.`, "default");
     return;
   }
 
   const bothProfilesFailed = userResult.status === "rejected" && orgResult.status === "rejected";
   const prefix = bothProfilesFailed ? "Failed to load GitHub profiles." : "Loaded with warnings.";
+  if (bothProfilesFailed) {
+    setOpsNetworkState("DEGRADED", "degraded", "api limited");
+  } else {
+    setOpsNetworkState("WARN", "warning", "partial data");
+  }
   setStatus(`${prefix} ${warnings.join(" ")}`, bothProfilesFailed ? "error" : "warning");
 }
 
 function init(): void {
   if (!form || !userInput || !orgInput) return;
+
+  const view = resolvePageView(window.location.pathname);
+  applyPageView(view);
+  startOpsTelemetryClock();
+  initEmailReveal();
+  if (view === "resume") {
+    void loadResumeMarkdown();
+  } else {
+    setOpsResumeSummary("ready");
+  }
 
   const params = new URLSearchParams(window.location.search);
   const queryUser = sanitizeHandle(params.get("user") ?? "");

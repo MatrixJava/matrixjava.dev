@@ -13,7 +13,155 @@
 <body>
   <div class="bg-grid" aria-hidden="true"></div>
   <main class="shell">
-    <section class="terminal-block reveal" style="--delay: 0s;">
+    <section class="ops-frame reveal" style="--delay: 0s;">
+      <header class="ops-topline">
+        <div class="ops-clock-block">
+          <span class="ops-kicker">local time</span>
+          <strong id="ops-clock">--:--:--</strong>
+          <span id="ops-date" class="ops-micro">--- -- ----</span>
+        </div>
+        <nav class="ops-tabs" aria-label="System tabs">
+          <a class="ops-tab ops-tab-active" data-page="main" href="/main">
+            <span class="ops-tab-label">MAIN - bash</span>
+            <span id="ops-tab-main" class="ops-tab-value">matrixjava@devstack</span>
+          </a>
+          <a class="ops-tab" data-page="portfolio" href="/portfolio">
+            <span class="ops-tab-label">PORTFOLIO</span>
+            <span id="ops-tab-portfolio" class="ops-tab-value">matrixjava.dev</span>
+          </a>
+          <a class="ops-tab" data-page="github" href="/github">
+            <span class="ops-tab-label">GITHUB</span>
+            <span id="ops-tab-github" class="ops-tab-value">@matrixjava | @bytebasherslabs</span>
+          </a>
+          <a class="ops-tab" data-page="network" href="/network">
+            <span class="ops-tab-label">NETWORK</span>
+            <span id="ops-tab-network" class="ops-tab-value">awaiting sync</span>
+          </a>
+          <a class="ops-tab" data-page="resume" href="/resume">
+            <span class="ops-tab-label">RESUME</span>
+            <span id="ops-tab-resume" class="ops-tab-value">work-experience.md</span>
+          </a>
+        </nav>
+        <div class="ops-net-block">
+          <span class="ops-kicker">network</span>
+          <strong id="ops-network-state">ONLINE</strong>
+          <span id="ops-uptime" class="ops-micro">uptime 00:00:00</span>
+        </div>
+      </header>
+
+      <div class="ops-grid">
+        <aside class="ops-side">
+          <section class="ops-widget">
+            <p class="ops-widget-title">power</p>
+            <p class="ops-widget-value">stable</p>
+          </section>
+          <section class="ops-widget">
+            <p class="ops-widget-title">deploy mode</p>
+            <p class="ops-widget-value">production</p>
+          </section>
+          <section class="ops-widget ops-widget-graph" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </section>
+        </aside>
+
+        <section class="ops-main-view" aria-label="System readout">
+          <pre class="ops-ascii">
+matrixjava@devstack
+-------------------
+OS: Bun + TypeScript + Vercel
+Host: matrixjava.dev
+Theme: Neon Purple / Black
+Status: live github telemetry
+          </pre>
+          <div class="ops-readout">
+            <p><span>source:</span> github user + org streams</p>
+            <p><span>render:</span> client-side typed ui pipeline</p>
+            <p><span>runtime:</span> bun local / serverless prod</p>
+          </div>
+        </section>
+
+        <aside class="ops-side ops-side-right">
+          <section class="ops-widget">
+            <p class="ops-widget-title">api</p>
+            <p class="ops-widget-value">github v3</p>
+          </section>
+          <section class="ops-widget ops-widget-radar" aria-hidden="true">
+            <span></span>
+          </section>
+          <section class="ops-widget">
+            <p class="ops-widget-title">sync</p>
+            <p class="ops-widget-value">active</p>
+          </section>
+        </aside>
+      </div>
+
+      <div class="ops-lower">
+        <section class="ops-files-panel">
+          <header class="ops-files-header">
+            <span>filesystem</span>
+            <span id="ops-files-summary">loading...</span>
+          </header>
+          <div class="ops-file-cols">
+            <span>name</span>
+            <span>type</span>
+            <span>updated</span>
+          </div>
+          <ul id="ops-file-feed" class="ops-file-feed">
+            <li><span>booting...</span><span>stream</span><span>--</span></li>
+          </ul>
+          <p id="ops-files-foot" class="ops-files-foot">Mount /github used --</p>
+        </section>
+
+        <section class="ops-keysurface" aria-hidden="true">
+          <div class="ops-keyrow-top">
+            <span class="key-wide">esc</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>0</span>
+            <span class="key-wide">back</span>
+          </div>
+          <footer class="ops-keydeck">
+            <span class="key-wide">tab</span>
+            <span>q</span>
+            <span>w</span>
+            <span>e</span>
+            <span>r</span>
+            <span>t</span>
+            <span>y</span>
+            <span>u</span>
+            <span>i</span>
+            <span>o</span>
+            <span>p</span>
+            <span class="key-wide">enter</span>
+            <span class="key-wide">caps</span>
+            <span>a</span>
+            <span>s</span>
+            <span>d</span>
+            <span>f</span>
+            <span>g</span>
+            <span>h</span>
+            <span>j</span>
+            <span>k</span>
+            <span>l</span>
+            <span class="key-wide">shift</span>
+            <span class="key-wide">ctrl</span>
+            <span>fn</span>
+            <span class="key-wide">alt</span>
+            <span class="key-space">space</span>
+            <span class="key-wide">alt</span>
+          </footer>
+        </section>
+      </div>
+    </section>
+
+    <section class="terminal-block reveal" data-pages="main" style="--delay: 0.08s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ whoami</p>
       <h1 id="display-name">matrixjava <span class="cursor">_</span></h1>
       <p class="subhead" id="headline">Builder, debugger, and open-source collaborator.</p>
@@ -25,12 +173,12 @@
       <nav class="socials" aria-label="Social links">
         <a id="github-profile-link" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
         <a href="https://www.linkedin.com/in/terrillmoyoiv/" target="_blank" rel="noreferrer">LinkedIn</a>
-        <a href="mailto:you@example.com">Email</a>
-        <a href="#">Resume</a>
+        <a id="email-reveal-trigger" href="#" aria-label="Reveal email address">Email</a>
+        <a id="resume-link" href="/resume">Resume</a>
       </nav>
     </section>
 
-    <section class="terminal-block reveal" style="--delay: 0.12s;">
+    <section class="terminal-block reveal" data-pages="github" style="--delay: 0.16s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ config github.sources</p>
       <form id="github-form" class="github-form">
         <div class="config-grid">
@@ -52,7 +200,7 @@
       <div id="org-summary" class="metrics org-summary" aria-live="polite"></div>
     </section>
 
-    <section class="terminal-block reveal" style="--delay: 0.24s;">
+    <section class="terminal-block reveal" data-pages="portfolio" style="--delay: 0.28s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ ls github/repos --sort=updated</p>
       <div class="repo-section">
         <h2 class="section-title" id="user-repos-title">Personal Repositories (@MatrixJava)</h2>
@@ -64,7 +212,7 @@
       </div>
     </section>
 
-    <section class="terminal-block reveal" style="--delay: 0.36s;">
+    <section class="terminal-block reveal" data-pages="network" style="--delay: 0.4s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ monitor --public contributions --user</p>
       <h2 class="section-title" id="activity-title">Personal Public Activity (@MatrixJava)</h2>
       <div class="contrib-wrap">
@@ -73,7 +221,14 @@
       <div id="activity-list" class="activity-list" aria-live="polite"></div>
     </section>
 
-    <section class="terminal-block reveal" style="--delay: 0.48s;">
+    <section class="terminal-block reveal" data-pages="resume" style="--delay: 0.48s;">
+      <p class="prompt"><span class="host">you@devstack</span>:~$ cat docs/work-experience.md</p>
+      <h2 class="section-title">Work Experience Dossier</h2>
+      <p id="resume-status" class="status">Loading work experience markdown...</p>
+      <div id="resume-markdown" class="resume-markdown" aria-live="polite"></div>
+    </section>
+
+    <section class="terminal-block reveal" data-pages="main" style="--delay: 0.52s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ cat interests.md</p>
       <ul class="simple-list">
         <li>Developer tools and terminal workflows</li>
@@ -83,10 +238,10 @@
       </ul>
     </section>
 
-    <section class="terminal-block reveal" style="--delay: 0.6s;">
+    <section class="terminal-block reveal" data-pages="main" style="--delay: 0.64s;">
       <p class="prompt"><span class="host">you@devstack</span>:~$ contact</p>
       <ul class="simple-list">
-        <li>Email: <a href="mailto:you@example.com">you@example.com</a></li>
+        <li>Email: <a href="mailto:terrillmoyo@me.com">terrillmoyo@me.com</a></li>
         <li>GitHub: <a id="contact-github-link" href="https://github.com/" target="_blank" rel="noreferrer">github.com/yourusername</a></li>
         <li>LinkedIn: <a href="https://www.linkedin.com/in/terrillmoyoiv/" target="_blank" rel="noreferrer">linkedin.com/in/terrillmoyoiv</a></li>
         <li>Org: <a id="contact-org-link" href="https://github.com/ByteBashersLabs" target="_blank" rel="noreferrer">github.com/ByteBashersLabs</a></li>
